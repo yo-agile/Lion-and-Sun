@@ -1,0 +1,4 @@
+[submodule "tunnel-core"]
+	path = tunnel-core
+	url = https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
+	branch = master
