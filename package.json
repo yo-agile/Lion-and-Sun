@@ -1,0 +1,46 @@
+{
+  "name": "psiphon-windows-app",
+  "version": "1.0.0",
+  "description": "Psiphon Windows app with protocol selection (CDN fronting, conduit, etc.)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "dev": "electron . --enable-logging"
+  },
+  "author": "Community",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0"
+  },
+  "dependencies": {
+    "electron-log": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.psiphon.windows.app",
+    "productName": "Psiphon Windows",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "styles.css",
+      "renderer.js",
+      "../psiphon-tunnel-core/ConsoleClient/bin/windows/x86_64/*.exe"
+    ],
+    "extraResources": [
+      {
+        "from": "../psiphon-tunnel-core/ConsoleClient/bin/windows/x86_64",
+        "to": "tunnel-core",
+        "filter": ["*.exe"]
+      }
+    ]
+  }
+}

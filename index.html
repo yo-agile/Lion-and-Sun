@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+    <title>Psiphon Windows - Protocol Selection</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Psiphon Windows</h1>
+            <div class="status-container">
+                <span id="status-text">Disconnected</span>
+                <button id="connect-btn" class="btn btn-primary">Connect</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="settings-section">
+                <h2>Protocol Selection</h2>
+                <div class="form-group">
+                    <label for="protocol-mode">Tunnel Protocol</label>
+                    <select id="protocol-mode" class="form-control">
+                        <option value="auto" selected>Auto (Recommended)</option>
+                        <option value="direct">Direct (SSH/OSSH)</option>
+                        <option value="cdn_fronting">CDN Fronting (Meek)</option>
+                        <option value="conduit">Conduit</option>
+                    </select>
+                    <small class="help-text">Select how traffic is routed through Psiphon servers.</small>
+                </div>
+
+                <div id="cdn-fronting-options" class="options-panel" style="display: none;">
+                    <h3>CDN Fronting Options</h3>
+                    <div class="form-group">
+                        <label for="cdn-fronting-ips">Custom IP List</label>
+                        <textarea id="cdn-fronting-ips" class="form-control" rows="3" placeholder="Enter custom CDN IPs (one per line)"></textarea>
+                        <small class="help-text">Optional: Specify custom IPs for CDN fronting.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="cdn-fronting-sni">Custom SNI</label>
+                        <input type="text" id="cdn-fronting-sni" class="form-control" placeholder="e.g., cdn.discordapp.com">
+                        <small class="help-text">Optional: Specify custom SNI for CDN fronting.</small>
+                    </div>
+                </div>
+
+                <div id="conduit-options" class="options-panel" style="display: none;">
+                    <h3>Conduit Mode</h3>
+                    <div class="form-group">
+                        <label for="conduit-mode">Conduit Configuration</label>
+                        <select id="conduit-mode" class="form-control">
+                            <option value="auto" selected>Auto</option>
+                            <option value="shirokhorshid">ShirOKhorshid</option>
+                            <option value="public">Public</option>
+                        </select>
+                        <small class="help-text">Select conduit tunneling mode.</small>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h2>Local Proxy</h2>
+                <div class="form-group">
+                    <label for="socks-port">SOCKS Proxy Port</label>
+                    <input type="number" id="socks-port" class="form-control" placeholder="Auto (0)">
+                    <small class="help-text">Leave blank for automatic port selection.</small>
+                </div>
+                <div class="form-group">
+                    <label for="http-port">HTTP/HTTPS Proxy Port</label>
+                    <input type="number" id="http-port" class="form-control" placeholder="Auto (0)">
+                    <small class="help-text">Leave blank for automatic port selection.</small>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h2>Network Sharing</h2>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="expose-lan">
+                        <span>Allow other devices on network to use local proxies</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="upstream-proxy">Upstream Proxy (optional)</label>
+                    <input type="text" id="upstream-proxy" class="form-control" placeholder="http://proxy:port">
+                    <small class="help-text">Use an upstream proxy if required by your network.</small>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h2>Split Tunnel</h2>
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="split-tunnel">
+                        <span>Enable split tunnel</span>
+                    </label>
+                </div>
+                <div class="form-group checkbox-group" id="split-tunnel-chinese" style="display: none;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="split-tunnel-chinese-sites">
+                        <span>Only tunnel Chinese sites</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <h2>Logs</h2>
+                <div class="log-container">
+                    <div id="log-output" class="log-output"></div>
+                </div>
+                <button id="clear-logs" class="btn btn-secondary">Clear Logs</button>
+            </section>
+        </main>
+
+        <footer>
+            <p>Psiphon Windows - Protocol Selection | GPL-3.0 License</p>
+        </footer>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
