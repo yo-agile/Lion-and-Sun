@@ -32,7 +32,7 @@ jobs:
           path: tunnel-core/ConsoleClient/bin/windows/x86_64/psiphon-tunnel-core.exe
 
   build-electron:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: build-tunnel-core
     steps:
       - name: Checkout
@@ -50,7 +50,7 @@ jobs:
           node-version: '20'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build Electron App
         run: npm run build
