@@ -47,7 +47,7 @@ jobs:
             dist/*.exe
             bin/tunnel-core/*.exe
 
-  upload-release:
+  create-release:
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -58,12 +58,28 @@ jobs:
           path: .
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            *.exe
-            **/*.exe
-          generate_release_notes: true
-          draft: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get tag name from ref
+          TAG="${GITHUB_REF#refs/tags/}"
+          
+          # Create release via API
+          RELEASE_ID=$(curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases" \
+            -d "{\"tag_name\":\"$TAG\",\"name\":\"Lion and Sun $TAG\",\"draft\":false,\"prerelease\":false}" \
+            | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+          
+          echo "Created release ID: $RELEASE_ID"
+          
+          # Upload exe files
+          for f in $(find . -name "*.exe" -type f); do
+            echo "Uploading $f..."
+            curl -s -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$(basename $f)" \
+              --data-binary "@$f"
+          done
+          
+          echo "Release created: https://github.com/${{ github.repository }}/releases/tag/$TAG"
