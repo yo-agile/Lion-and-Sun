@@ -61,14 +61,19 @@ jobs:
         run: |
           # Get tag name from ref
           TAG="${GITHUB_REF#refs/tags/}"
+          echo "Tag: $TAG"
           
           # Create release via API
-          RELEASE_ID=$(curl -s -X POST \
+          RESPONSE=$(curl -s -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/releases" \
-            -d "{\"tag_name\":\"$TAG\",\"name\":\"Lion and Sun $TAG\",\"draft\":false,\"prerelease\":false}" \
-            | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+            -d "{\"tag_name\":\"$TAG\",\"name\":\"Lion and Sun $TAG\",\"draft\":false,\"prerelease\":false}")
+          
+          echo "Response: $RESPONSE"
+          
+          # Extract release ID using Python
+          RELEASE_ID=$(echo "$RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin).get('id', ''))")
           
           echo "Created release ID: $RELEASE_ID"
           
@@ -80,6 +85,7 @@ jobs:
               -H "Content-Type: application/octet-stream" \
               "https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$(basename $f)" \
               --data-binary "@$f"
+            echo ""
           done
           
           echo "Release created: https://github.com/${{ github.repository }}/releases/tag/$TAG"
