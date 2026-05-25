@@ -1,5 +1,6 @@
 {
-  "name": "psiphon-windows-app",
+  "name": "lion-and-sun",
+  "productName": "Lion and Sun",
   "version": "1.0.0",
   "description": "Psiphon Windows app with protocol selection (CDN fronting, conduit, etc.)",
   "main": "main.js",
@@ -8,7 +9,7 @@
     "build": "electron-builder --win --x64",
     "dev": "electron . --enable-logging"
   },
-  "author": "Community",
+  "author": "Lion and Sun Team",
   "license": "GPL-3.0",
   "devDependencies": {
     "electron": "^28.0.0",
@@ -18,14 +19,13 @@
     "electron-log": "^5.0.0"
   },
   "build": {
-    "appId": "com.psiphon.windows.app",
-    "productName": "Psiphon Windows",
+    "appId": "com.lionandsun.psiphon",
+    "productName": "Lion and Sun",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "target": "portable",
-      "icon": "icon.ico"
+      "target": "portable"
     },
     "files": [
       "main.js",
@@ -33,14 +33,15 @@
       "index.html",
       "styles.css",
       "renderer.js",
-      "../psiphon-tunnel-core/ConsoleClient/bin/windows/x86_64/*.exe"
+      "package.json"
     ],
     "extraResources": [
       {
-        "from": "../psiphon-tunnel-core/ConsoleClient/bin/windows/x86_64",
+        "from": "bin/tunnel-core",
         "to": "tunnel-core",
         "filter": ["*.exe"]
       }
-    ]
+    ],
+    "asar": true
   }
 }
