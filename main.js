@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
 const log = require('electron-log');
 
 log.transports.file.level = 'info';
@@ -11,9 +13,73 @@ let mainWindow;
 let psiphonProcess = null;
 let isConnected = false;
 
-const TUNNEL_CORE_PATH = app.isPackaged 
-    ? path.join(process.resourcesPath, 'tunnel-core', 'psiphon-tunnel-core-x86_64.exe')
-    : path.join(__dirname, '..', 'psiphon-tunnel-core', 'ConsoleClient', 'bin', 'windows', 'x86_64', 'psiphon-tunnel-core-x86_64.exe');
+const TUNNEL_CORE_VERSION = 'latest';
+const TUNNEL_CORE_URL = `https://github.com/Psiphon-Labs/psiphon-tunnel-core/releases/download/${TUNNEL_CORE_VERSION}/psiphon-tunnel-core-windows-x64.exe`;
+
+// Alternative: Build from source if release not available
+const TUNNEL_CORE_REPO = 'https://github.com/Psiphon-Labs/psiphon-tunnel-core.git';
+const BUILD_SCRIPT = `
+cd tunnel-core/ConsoleClient
+GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o bin/windows/x86_64/psiphon-tunnel-core.exe .
+`;
+
+function getTunnelCorePath() {
+    const baseDir = app.isPackaged ? process.resourcesPath : path.join(__dirname, 'bin');
+    const tunnelDir = path.join(baseDir, 'tunnel-core');
+    const exePath = path.join(tunnelDir, 'psiphon-tunnel-core.exe');
+    
+    // If exe exists, return it
+    if (fs.existsSync(exePath)) {
+        return exePath;
+    }
+    
+    // Create bin/tunnel-core directory
+    if (!fs.existsSync(tunnelDir)) {
+        fs.mkdirSync(tunnelDir, { recursive: true });
+    }
+    
+    return exePath;
+}
+
+async function downloadTunnelCore() {
+    const exePath = getTunnelCorePath();
+    
+    if (fs.existsSync(exePath)) {
+        log.info('Tunnel core already exists');
+        return exePath;
+    }
+    
+    log.info(`Downloading tunnel core from ${TUNNEL_CORE_URL}...`);
+    
+    return new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(exePath);
+        https.get(TUNNEL_CORE_URL, (response) => {
+            if (response.statusCode === 302 || response.statusCode === 301) {
+                // Follow redirect
+                const redirectUrl = response.headers.location;
+                log.info(`Following redirect to ${redirectUrl}`);
+                https.get(redirectUrl, (redirectResponse) => {
+                    redirectResponse.pipe(file);
+                    file.on('finish', () => {
+                        file.close();
+                        log.info('Tunnel core downloaded successfully');
+                        resolve(exePath);
+                    });
+                }).on('error', reject);
+            } else {
+                response.pipe(file);
+                file.on('finish', () => {
+                    file.close();
+                    log.info('Tunnel core downloaded successfully');
+                    resolve(exePath);
+                });
+            }
+        }).on('error', (err) => {
+            fs.unlink(exePath, () => {});
+            reject(err);
+        });
+    });
+}
 
 function getConfigPath() {
     const configDir = path.join(app.getPath('userData'), 'config');
@@ -140,13 +206,27 @@ function startPsiphon(settings) {
 
         log.info('Starting Psiphon with config:', configPath);
         
+        // Get tunnel core path (download if needed)
+        const tunnelCorePath = getTunnelCorePath();
+        
+        // Download if not exists
+        if (!fs.existsSync(tunnelCorePath)) {
+            try {
+                await downloadTunnelCore();
+            } catch (err) {
+                log.error('Failed to download tunnel core:', err);
+                reject(err);
+                return;
+            }
+        }
+        
         const args = [
             '-config', configPath,
             '-verbosity', '2'
         ];
 
         try {
-            psiphonProcess = spawn(TUNNEL_CORE_PATH, args, {
+            psiphonProcess = spawn(tunnelCorePath, args, {
                 detached: false,
                 stdio: ['ignore', 'pipe', 'pipe']
             });

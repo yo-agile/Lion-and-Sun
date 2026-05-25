@@ -1,0 +1,51 @@
+name: Build and Release 🦁☀️
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Tunnel Core for Windows
+        run: |
+          cd tunnel-core/ConsoleClient
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o bin/windows/x86_64/psiphon-tunnel-core.exe .
+          mkdir -p ../../bin/tunnel-core
+          cp bin/windows/x86_64/psiphon-tunnel-core.exe ../../bin/tunnel-core/
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Electron App
+        run: npm run build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.exe
+            bin/tunnel-core/*.exe
+          generate_release_notes: true
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
